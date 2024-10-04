@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project.name }} - References</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>References for {{ project.name }}</h1>
+        <form action="/project/{{ project.id }}/add_reference" method="POST" class="mb-3">
+            <div class="mb-3">
+                <label for="author" class="form-label">Author</label>
+                <input type="text" class="form-control" id="author" name="author" required>
+            </div>
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="journal" class="form-label">Journal</label>
+                <input type="text" class="form-control" id="journal" name="journal">
+            </div>
+            <div class="mb-3">
+                <label for="year" class="form-label">Year</label>
+                <input type="number" class="form-control" id="year" name="year">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Reference</button>
+        </form>
+        
+        <ul class="list-group">
+            {% for ref in references %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ ref.author }} - {{ ref.title }} ({{ ref.year }})
+                <div>
+                    <a href="/project/{{ project.id }}/edit_reference/{{ ref.id }}" class="btn btn-warning">Edit</a>
+                    <a href="/project/{{ project.id }}/delete_reference/{{ ref.id }}" class="btn btn-danger">Delete</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <a href="/project/{{ project.id }}/report" class="btn btn-success mt-3">Generate Report</a>
+    </div>
+</body>
+</html>
