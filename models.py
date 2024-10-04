@@ -17,6 +17,7 @@ class Reference(db.Model):
     issue = db.Column(db.String(50))   # Add issue field
     pages = db.Column(db.String(50))   # Add pages field
     doi = db.Column(db.String(200))    # Add DOI field
+    original_string = db.Column(db.String(1024))    # Add DOI field
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     
     # Method to convert the model instance to a dictionary

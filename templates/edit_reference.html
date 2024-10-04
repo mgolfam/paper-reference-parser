@@ -10,6 +10,10 @@
         <h1>Edit ref</h1>
         <form action="" method="POST">
             <div class="mb-3">
+                <label for="original_string" class="form-label">Original String</label>
+                <textarea class="form-control" id="original_string" name="original_string" rows="5" required>{{ ref.original_string }}</textarea>
+            </div>
+            <div class="mb-3">
                 <label for="author" class="form-label">Author</label>
                 <input type="text" class="form-control" id="author" name="author" value="{{ ref.author }}" required>
             </div>

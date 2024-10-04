@@ -4,6 +4,7 @@ from models import Project, Reference
 import json
 from db import db
 from reference_parser import BruteForceReferenceParser  # Import the new parser class
+from nlp_parser import nlp_parser  # Import the new parser class
 
 
 # Define a Blueprint for routes
@@ -115,8 +116,8 @@ def add_reference(project_id):
     if 'plain_reference' in request.form and request.form['plain_reference']:
         # If plain string reference is provided
         plain_reference = request.form['plain_reference']
-        parser = BruteForceReferenceParser(plain_reference)  # Instantiate the parser
-        parsed_refs = parser.get_parsed_references()
+        # parser = BruteForceReferenceParser(plain_reference)  # Instantiate the parser
+        parsed_refs = nlp_parser(plain_reference)
 
         for parsed_ref in parsed_refs:
             # Save the parsed reference to the database
@@ -130,7 +131,8 @@ def add_reference(project_id):
                 issue=parsed_ref['issue'],
                 pages=parsed_ref['pages'],
                 doi=parsed_ref['doi'],
-                project_id=project_id
+                project_id=project_id,
+                original_string=parsed_ref['original_string']
             )
             db.session.add(new_ref)
             
@@ -141,11 +143,13 @@ def add_reference(project_id):
         title = request.form['title']
         journal = request.form['journal']
         year = request.form['year']
+        doi = request.form['doi']
         new_ref = Reference(
             author=author,
             title=title,
             journal=journal,
             year=year,
+            doi=doi,
             project_id=project_id
         )
         db.session.add(new_ref)
@@ -229,6 +233,6 @@ def print_references(project_id):
     return render_template('print_references.html', project=project, references=references)
 
 @main_routes.route('/project/<int:project_id>/add_reference', methods=['GET'])
-def show_add_reference_form(project_id):
-    ref = Reference.query.get_or_404(project_id)
-    return render_template('edit_reference.html', ref=ref, reference={})
+def add_reference_form(project_id):
+    project = Project.query.get_or_404(project_id)
+    return render_template('edit_reference.html', ref={}, project=project)
