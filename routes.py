@@ -116,23 +116,24 @@ def add_reference(project_id):
         # If plain string reference is provided
         plain_reference = request.form['plain_reference']
         parser = BruteForceReferenceParser(plain_reference)  # Instantiate the parser
-        parsed_ref = parser.get_parsed_reference()
+        parsed_refs = parser.get_parsed_references()
 
-        # Save the parsed reference to the database
-        # Use 'authors' instead of 'author'
-        new_ref = Reference(
-            author=parsed_ref['authors'],  # Fix this line
-            title=parsed_ref['title'],
-            journal=parsed_ref['journal'],
-            year=parsed_ref['year'],
-            volume=parsed_ref['volume'],
-            issue=parsed_ref['issue'],
-            pages=parsed_ref['pages'],
-            doi=parsed_ref['doi'],
-            project_id=project_id
-        )
-
-        db.session.add(new_ref)
+        for parsed_ref in parsed_refs:
+            # Save the parsed reference to the database
+            # Use 'authors' instead of 'author'
+            new_ref = Reference(
+                author=parsed_ref['authors'],  # Fix this line
+                title=parsed_ref['title'],
+                journal=parsed_ref['journal'],
+                year=parsed_ref['year'],
+                volume=parsed_ref['volume'],
+                issue=parsed_ref['issue'],
+                pages=parsed_ref['pages'],
+                doi=parsed_ref['doi'],
+                project_id=project_id
+            )
+            db.session.add(new_ref)
+            
         db.session.commit()
     else:
         # Handle the form input (individual fields)

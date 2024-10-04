@@ -78,9 +78,10 @@ class ReferenceParser:
 class BruteForceReferenceParser:
     
     def __init__(self, reference_string):
-        self.reference_string = reference_string.strip()
+        # Split the input string by newline characters and strip extra whitespace
+        self.reference_strings = [ref.strip() for ref in reference_string.split('\n') if ref.strip()]
         self.regex_patterns = self.define_regex_patterns()
-        self.parsed_reference = self.parse_reference()
+        self.parsed_references = self.parse_multiple_references()
 
     def define_regex_patterns(self):
         """
@@ -101,7 +102,7 @@ class BruteForceReferenceParser:
         ]
         return patterns
 
-    def apply_regex_patterns(self):
+    def apply_regex_patterns(self, reference_string):
         """
         Apply each regex pattern to the reference string and return the best match.
         """
@@ -109,7 +110,7 @@ class BruteForceReferenceParser:
         max_score = 0
 
         for pattern in self.regex_patterns:
-            match = re.search(pattern, self.reference_string, re.DOTALL)
+            match = re.search(pattern, reference_string, re.DOTALL)
             if match:
                 # Evaluate how many fields were matched
                 score = len([group for group in match.groupdict().values() if group is not None])
@@ -119,11 +120,11 @@ class BruteForceReferenceParser:
 
         return best_match
 
-    def parse_reference(self):
+    def parse_reference(self, reference_string):
         """
-        Parse the reference string by trying multiple regex patterns and choosing the best one.
+        Parse a single reference string by trying multiple regex patterns and choosing the best one.
         """
-        match = self.apply_regex_patterns()
+        match = self.apply_regex_patterns(reference_string)
         if match:
             parsed_reference = match.groupdict()
             # Fill missing fields with a blank space
@@ -147,5 +148,15 @@ class BruteForceReferenceParser:
                 'institution': ' '
             }
 
-    def get_parsed_reference(self):
-        return self.parsed_reference
+    def parse_multiple_references(self):
+        """
+        Parse multiple references (split by newline) and return a list of parsed references.
+        """
+        parsed_references = []
+        for reference_string in self.reference_strings:
+            parsed_reference = self.parse_reference(reference_string)
+            parsed_references.append(parsed_reference)
+        return parsed_references
+
+    def get_parsed_references(self):
+        return self.parsed_references
