@@ -1,8 +1,9 @@
 import re
 from flask import Blueprint, render_template, request, redirect, url_for
 from models import Project, Reference
+import json
 from db import db
-from reference_parser import ReferenceParser  # Import the new parser class
+from reference_parser import BruteForceReferenceParser  # Import the new parser class
 
 
 # Define a Blueprint for routes
@@ -114,21 +115,23 @@ def add_reference(project_id):
     if 'plain_reference' in request.form and request.form['plain_reference']:
         # If plain string reference is provided
         plain_reference = request.form['plain_reference']
-        parser = ReferenceParser(plain_reference)  # Instantiate the parser
+        parser = BruteForceReferenceParser(plain_reference)  # Instantiate the parser
         parsed_ref = parser.get_parsed_reference()
 
         # Save the parsed reference to the database
+        # Use 'authors' instead of 'author'
         new_ref = Reference(
-            author=parsed_ref['author'],
+            author=parsed_ref['authors'],  # Fix this line
             title=parsed_ref['title'],
             journal=parsed_ref['journal'],
             year=parsed_ref['year'],
-            project_id=project_id,
             volume=parsed_ref['volume'],
             issue=parsed_ref['issue'],
             pages=parsed_ref['pages'],
-            doi=parsed_ref['doi']
+            doi=parsed_ref['doi'],
+            project_id=project_id
         )
+
         db.session.add(new_ref)
         db.session.commit()
     else:
@@ -159,15 +162,53 @@ def project_references(project_id):
 
 # Route to edit a reference
 @main_routes.route('/project/<int:project_id>/edit_reference/<int:id>', methods=['GET', 'POST'])
-def edit_reference(project_id, id):
-    ref = Reference.query.get_or_404(id)
+def edit_reference(project_id, id):    
+    if id:
+        # If ID is provided, fetch the reference for editing
+        ref = Reference.query.get_or_404(id)
+    else:
+        # If no ID is provided, create a new reference object
+        ref = None
+    
     if request.method == 'POST':
-        ref.author = request.form['author']
-        ref.title = request.form['title']
-        ref.journal = request.form['journal']
-        ref.year = request.form['year']
+        # Handle form submission for both adding and editing references
+        author = request.form['author']
+        title = request.form['title']
+        journal = request.form['journal']
+        year = request.form['year']
+        volume = request.form['volume']
+        issue = request.form['issue']
+        pages = request.form['pages']
+        doi = request.form['doi']
+        
+        if ref:
+            # If reference exists, update the existing fields
+            ref.author = author
+            ref.title = title
+            ref.journal = journal
+            ref.year = year
+            ref.volume = volume
+            ref.issue = issue
+            ref.pages = pages
+            ref.doi = doi
+        else:
+            # If no reference, create a new reference with project_id
+            ref = Reference(
+                author=author,
+                title=title,
+                journal=journal,
+                year=year,
+                volume=volume,
+                issue=issue,
+                pages=pages,
+                doi=doi,
+                project_id=project_id
+            )
+            db.session.add(ref)
+        
         db.session.commit()
         return redirect(url_for('main.project_references', project_id=project_id))
+    print(json.dumps(ref.to_dict(), indent=4))
     return render_template('edit_reference.html', ref=ref)
 
 # Route to delete a reference
@@ -185,3 +226,8 @@ def print_references(project_id):
     # Sort references by author and year for a journal-like format
     references = Reference.query.filter_by(project_id=project_id).order_by(Reference.author, Reference.year).all()
     return render_template('print_references.html', project=project, references=references)
+
+@main_routes.route('/project/<int:project_id>/add_reference', methods=['GET'])
+def show_add_reference_form(project_id):
+    ref = Reference.query.get_or_404(project_id)
+    return render_template('edit_reference.html', ref=ref, reference={})

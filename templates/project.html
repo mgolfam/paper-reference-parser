@@ -9,27 +9,9 @@
     <div class="container">
         <h1>References for {{ project.name }}</h1>
 
-        <!-- Form for adding reference using individual fields -->
-        <form action="/project/{{ project.id }}/add_reference" method="POST" class="mb-3">
-            <h3>Add Reference (Using Form)</h3>
-            <div class="mb-3">
-                <label for="author" class="form-label">Author</label>
-                <input type="text" class="form-control" id="author" name="author" required>
-            </div>
-            <div class="mb-3">
-                <label for="title" class="form-label">Title</label>
-                <input type="text" class="form-control" id="title" name="title" required>
-            </div>
-            <div class="mb-3">
-                <label for="journal" class="form-label">Journal</label>
-                <input type="text" class="form-control" id="journal" name="journal">
-            </div>
-            <div class="mb-3">
-                <label for="year" class="form-label">Year</label>
-                <input type="number" class="form-control" id="year" name="year">
-            </div>
-            <button type="submit" class="btn btn-primary">Add Reference</button>
-        </form>
+        <!-- Redirect to Add Reference page -->
+        <a href="/project/{{ project.id }}/add_reference" class="btn btn-primary mb-3">Add Reference (Manual Add)</a>
+
 
         <!-- Form for adding reference using plain string -->
         <form action="/project/{{ project.id }}/add_reference" method="POST" class="mb-3">

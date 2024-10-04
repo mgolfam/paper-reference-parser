@@ -4,46 +4,148 @@ class ReferenceParser:
     
     def __init__(self, reference_string):
         self.reference_string = reference_string.strip()
+        self.regex_patterns = self.define_regex_patterns()
         self.parsed_reference = self.parse_reference()
 
+    def define_regex_patterns(self):
+        """
+        Define multiple regex patterns for parsing different reference formats.
+        """
+        patterns = [
+            # Pattern 1: General format (authors, year, title, journal, volume(issue), pages)
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<journal>.+?), (?P<volume>\d+)\((?P<issue>\d+)\), (?P<pages>\d+–?\d*)\.?(?P<doi>https?://[^\s]+)?',
+            
+            # Pattern 2: Format without issue number
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<journal>.+?), (?P<volume>\d+), (?P<pages>\d+–?\d*)\.?(?P<doi>https?://[^\s]+)?',
+            
+            # Pattern 3: Conference or book format
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. In: (?P<editor>.+?), (?P<book_title>.+?), (?P<pages>\d+–?\d*)\.?(?P<doi>https?://[^\s]+)?',
+
+            # Pattern 4: Technical report format
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<report>.+?)\. (?P<institution>.+?)\.?(?P<doi>https?://[^\s]+)?'
+        ]
+        return patterns
+
+    def apply_regex_patterns(self):
+        """
+        Apply each regex pattern to the reference string and return the best match.
+        """
+        best_match = None
+        max_score = 0
+
+        for pattern in self.regex_patterns:
+            match = re.search(pattern, self.reference_string)
+            if match:
+                # Evaluate how many fields were matched
+                score = len([group for group in match.groupdict().values() if group is not None])
+                if score > max_score:
+                    max_score = score
+                    best_match = match
+
+        return best_match
+
     def parse_reference(self):
-        # Step 1: Extract year
-        year_match = re.search(r'\((\d{4}[a-z]?)\)', self.reference_string)
-        year = year_match.group(1) if year_match else " "
-
-        # Step 2: Extract author(s) - assuming authors are at the start until the first period
-        author_part = self.reference_string.split(".")[0].strip()
-
-        # Step 3: Extract title - assuming title is between the first period and the journal
-        remaining_text = self.reference_string.split(".", 1)[1].strip() if '.' in self.reference_string else ""
-        title_match = re.search(r'(.+?)\. (.+)', remaining_text)
-        title = title_match.group(1).strip() if title_match else " "
-
-        # Step 4: Extract journal, volume, issue, and pages
-        journal_match = re.search(r'(.+?), (\d+)\((\d+)\), (\d+–\d+)', remaining_text)
-        if journal_match:
-            journal = journal_match.group(1).strip()
-            volume = journal_match.group(2).strip()
-            issue = journal_match.group(3).strip()
-            pages = journal_match.group(4).strip()
+        """
+        Parse the reference string by trying multiple regex patterns and choosing the best one.
+        """
+        match = self.apply_regex_patterns()
+        if match:
+            parsed_reference = match.groupdict()
+            # Fill missing fields with a blank space
+            for field in ['authors', 'year', 'title', 'journal', 'volume', 'issue', 'pages', 'doi', 'book_title', 'editor', 'report', 'institution']:
+                if field not in parsed_reference or parsed_reference[field] is None:
+                    parsed_reference[field] = ' '  # Fill missing fields with a blank space
+            return parsed_reference
         else:
-            journal, volume, issue, pages = " ", " ", " ", " "
+            return {
+                'authors': ' ',
+                'year': ' ',
+                'title': ' ',
+                'journal': ' ',
+                'volume': ' ',
+                'issue': ' ',
+                'pages': ' ',
+                'doi': ' ',
+                'book_title': ' ',
+                'editor': ' ',
+                'report': ' ',
+                'institution': ' '
+            }
 
-        # Step 5: Extract DOI or URL if available
-        doi_match = re.search(r'(https?://[^\s]+)', self.reference_string)
-        doi = doi_match.group(1) if doi_match else " "
+    def get_parsed_reference(self):
+        return self.parsed_reference
 
-        # Return parsed reference as a dictionary
-        return {
-            "author": author_part,
-            "year": year,
-            "title": title,
-            "journal": journal,
-            "volume": volume,
-            "issue": issue,
-            "pages": pages,
-            "doi": doi
-        }
+class BruteForceReferenceParser:
+    
+    def __init__(self, reference_string):
+        self.reference_string = reference_string.strip()
+        self.regex_patterns = self.define_regex_patterns()
+        self.parsed_reference = self.parse_reference()
+
+    def define_regex_patterns(self):
+        """
+        Define multiple regex patterns for parsing different reference formats.
+        """
+        patterns = [
+            # Journal article format with DOI, handling multiline input
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<journal>.+?), (?P<volume>\d+)\((?P<issue>\d+)\), (?P<pages>\d+–?\d*)\. (?P<doi>https?://[^\s]+)',
+            
+            # Journal article format without DOI, handling multiline input
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<journal>.+?), (?P<volume>\d+)\((?P<issue>\d+)\), (?P<pages>\d+–?\d*)',
+            
+            # Conference paper or book chapter format, handling multiline input
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. In: (?P<editor>.+?), (?P<book_title>.+?), pp\. (?P<pages>\d+–?\d*)\. (?P<doi>https?://[^\s]+)?',
+
+            # Technical report or book format, handling multiline input
+            r'(?P<authors>.+?) \((?P<year>\d{4}[a-z]?)\)\. (?P<title>.+?)\. (?P<report>.+?)\. (?P<institution>.+?)\. (?P<doi>https?://[^\s]+)?'
+        ]
+        return patterns
+
+    def apply_regex_patterns(self):
+        """
+        Apply each regex pattern to the reference string and return the best match.
+        """
+        best_match = None
+        max_score = 0
+
+        for pattern in self.regex_patterns:
+            match = re.search(pattern, self.reference_string, re.DOTALL)
+            if match:
+                # Evaluate how many fields were matched
+                score = len([group for group in match.groupdict().values() if group is not None])
+                if score > max_score:
+                    max_score = score
+                    best_match = match
+
+        return best_match
+
+    def parse_reference(self):
+        """
+        Parse the reference string by trying multiple regex patterns and choosing the best one.
+        """
+        match = self.apply_regex_patterns()
+        if match:
+            parsed_reference = match.groupdict()
+            # Fill missing fields with a blank space
+            for field in ['authors', 'year', 'title', 'journal', 'volume', 'issue', 'pages', 'doi', 'book_title', 'editor', 'report', 'institution']:
+                if field not in parsed_reference or parsed_reference[field] is None:
+                    parsed_reference[field] = ' '  # Fill missing fields with a blank space
+            return parsed_reference
+        else:
+            return {
+                'authors': ' ',
+                'year': ' ',
+                'title': ' ',
+                'journal': ' ',
+                'volume': ' ',
+                'issue': ' ',
+                'pages': ' ',
+                'doi': ' ',
+                'book_title': ' ',
+                'editor': ' ',
+                'report': ' ',
+                'institution': ' '
+            }
 
     def get_parsed_reference(self):
         return self.parsed_reference

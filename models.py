@@ -18,3 +18,18 @@ class Reference(db.Model):
     pages = db.Column(db.String(50))   # Add pages field
     doi = db.Column(db.String(200))    # Add DOI field
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    
+    # Method to convert the model instance to a dictionary
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'author': self.author,
+            'title': self.title,
+            'journal': self.journal,
+            'year': self.year,
+            'volume': self.volume,
+            'issue': self.issue,
+            'pages': self.pages,
+            'doi': self.doi,
+            'project_id': self.project_id
+        }
