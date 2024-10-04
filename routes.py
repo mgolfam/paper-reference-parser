@@ -1,3 +1,4 @@
+import re
 from flask import Blueprint, render_template, request, redirect, url_for
 from models import Project, Reference
 from db import db
@@ -19,6 +20,55 @@ def add_project():
     db.session.add(new_project)
     db.session.commit()
     return redirect(url_for('main.index'))
+
+def parse_reference_string(reference_string):
+    try:
+        # Improved regex to handle authors, multiple lines, and optional DOI/URL
+        match = re.search(
+            r'(.+?) \((\d{4}[a-z]?)\)\. (.+?)\. (.+?)(?:, (\d+)(?:\((\d+)\))?)?(?:, (\d+–\d+))?\.?(.*)',
+            reference_string, re.DOTALL
+        )
+        if match:
+            author = match.group(1).strip()
+            year = match.group(2).strip()
+            title = match.group(3).strip()
+            journal = match.group(4).strip()
+            volume = match.group(5).strip() if match.group(5) else None
+            issue = match.group(6).strip() if match.group(6) else None
+            pages = match.group(7).strip() if match.group(7) else None
+            doi = match.group(8).strip() if match.group(8) else None
+            return author, title, journal, year, volume, issue, pages, doi
+        else:
+            raise ValueError("Invalid reference format")
+    except Exception as e:
+        raise ValueError(f"Failed to parse reference: {str(e)}")
+
+
+
+# Route to handle adding a reference using both form or plain string input
+@main_routes.route('/project/<int:project_id>/add_reference', methods=['POST'])
+def add_reference(project_id):
+    if 'plain_reference' in request.form and request.form['plain_reference']:
+        # If plain string reference is provided
+        plain_reference = request.form['plain_reference']
+        try:
+            author, title, journal, year, volume, pages, doi = parse_reference_string(plain_reference)
+            new_ref = Reference(author=author, title=title, journal=journal, year=year, project_id=project_id)
+            db.session.add(new_ref)
+            db.session.commit()
+        except ValueError as e:
+            return str(e), 400  # Return error if parsing fails
+    else:
+        # Handle the form input
+        author = request.form['author']
+        title = request.form['title']
+        journal = request.form['journal']
+        year = request.form['year']
+        new_ref = Reference(author=author, title=title, journal=journal, year=year, project_id=project_id)
+        db.session.add(new_ref)
+        db.session.commit()
+    
+    return redirect(url_for('main.project_references', project_id=project_id))
 
 # Route to display references for a selected project
 @main_routes.route('/project/<int:project_id>')
