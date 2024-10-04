@@ -23,7 +23,7 @@
         <ul class="reference-list">
             {% for ref in references %}
             <li class="reference-item">
-                {{ ref.author }} ({{ ref.year }}). {{ ref.title }}. {{ ref.journal }}, 
+                [{{ loop.index }}] {{ ref.author }} ({{ ref.year }}). {{ ref.title }}. {{ ref.journal }}, 
                 {% if ref.volume %}{{ ref.volume }}{% endif %}
                 {% if ref.issue %}({{ ref.issue }}),{% endif %}
                 {% if ref.pages %}{{ ref.pages }}.{% endif %}
@@ -33,4 +33,7 @@
         </ul>
 
         <button class="btn btn-secondary" onclick="window.print()">Print this page</button>
-        <a href="/project/{{ project.id }}" class="btn btn-secondary mt-3
+        <a href="/project/{{ project.id }}" class="btn btn-secondary mt-3">Back to Project</a>
+    </div>
+</body>
+</html>

@@ -162,7 +162,7 @@ def add_reference(project_id):
 @main_routes.route('/project/<int:project_id>')
 def project_references(project_id):
     project = Project.query.get_or_404(project_id)
-    references = Reference.query.filter_by(project_id=project_id).order_by(Reference.author).all()
+    references = Reference.query.filter_by(project_id=project_id).order_by(Reference.reviewed, Reference.author, Reference.year.desc()).all()
     return render_template('project.html', project=project, references=references)
 
 # Route to edit a reference
@@ -230,7 +230,7 @@ def delete_reference(project_id, id):
 def print_references(project_id):
     project = Project.query.get_or_404(project_id)
     # Sort references by author and year for a journal-like format
-    references = Reference.query.filter_by(project_id=project_id).order_by(Reference.author, Reference.year).all()
+    references = Reference.query.filter_by(project_id=project_id).order_by(Reference.year.desc(), Reference.author).all()
     return render_template('print_references.html', project=project, references=references)
 
 @main_routes.route('/project/<int:project_id>/add_reference', methods=['GET'])
