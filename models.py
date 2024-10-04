@@ -9,6 +9,7 @@ class Project(db.Model):
 # Define the Reference model
 class Reference(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    reviewed = db.Column(db.Boolean, nullable=False, default=False)
     author = db.Column(db.String(200), nullable=False)
     title = db.Column(db.String(300), nullable=False)
     journal = db.Column(db.String(200))
@@ -24,6 +25,7 @@ class Reference(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'reviewed': self.reviewed,
             'author': self.author,
             'title': self.title,
             'journal': self.journal,

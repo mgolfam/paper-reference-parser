@@ -196,6 +196,7 @@ def edit_reference(project_id, id):
             ref.issue = issue
             ref.pages = pages
             ref.doi = doi
+            ref.reviewed = True
         else:
             # If no reference, create a new reference with project_id
             ref = Reference(

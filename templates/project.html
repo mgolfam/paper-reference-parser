@@ -12,7 +12,6 @@
         <!-- Redirect to Add Reference page -->
         <a href="/project/{{ project.id }}/add_reference" class="btn btn-primary mb-3">Add Reference (Manual Add)</a>
 
-
         <!-- Form for adding reference using plain string -->
         <form action="/project/{{ project.id }}/add_reference" method="POST" class="mb-3">
             <h3>Add Reference (Using Plain String)</h3>
@@ -26,9 +25,9 @@
         <!-- List of references with Edit and Delete buttons -->
         <ul class="list-group">
             {% for ref in references %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+            <li class="list-group-item d-flex justify-content-between align-items-center {% if ref.reviewed %}list-group-item-success{% endif %}">
                 {% set display_text = ref.author + " - " + ref.title + " (" + ref.year|string + ")" %}
-                {{ display_text[:142] + '...' if display_text|length > 145 else display_text }}
+                {{ display_text[:138] + '...' if display_text|length > 145 else display_text }}
                 <div>
                     <a href="/project/{{ project.id }}/edit_reference/{{ ref.id }}" class="btn btn-warning">Edit</a>
                     <a href="/project/{{ project.id }}/delete_reference/{{ ref.id }}" class="btn btn-danger">Delete</a>
@@ -36,7 +35,6 @@
             </li>
             {% endfor %}
         </ul>
-        
 
         <!-- Print Button -->
         <a href="/project/{{ project.id }}/print" class="btn btn-primary mt-3">Print References</a>
